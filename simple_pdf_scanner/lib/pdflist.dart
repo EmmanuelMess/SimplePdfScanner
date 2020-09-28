@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class PdfListPage extends StatefulWidget {
-  PdfListPage({Key key, this.title}) : super(key: key);
+import 'package:easy_localization/easy_localization.dart';
 
-  final String title;
+class PdfListPage extends StatefulWidget {
+  PdfListPage({Key key}) : super(key: key);
 
   @override
   _PdfListPageState createState() => _PdfListPageState();
@@ -22,7 +22,7 @@ class _PdfListPageState extends State<PdfListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("PdfListTitle").tr(),
       ),
       body: Center(
         child: Column(

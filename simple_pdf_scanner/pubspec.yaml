@@ -24,21 +24,27 @@ dependencies:
   flutter:
     sdk: flutter
 
+  easy_localization: ^2.3.2
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.3
+  floor: ^0.13.0
+  datetime_picker_formfield: ^1.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  floor_generator: ^0.13.0
+  build_runner: ^1.7.3
+  moor_ffi: ^0.6.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
-
+  assets:
+    - lib/l10n/
+    - lib/drawable/
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
