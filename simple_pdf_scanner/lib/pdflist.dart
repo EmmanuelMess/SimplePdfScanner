@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:simple_pdf_scanner/db/dao/protopdf_dao.dart';
+import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
-class PdfListPage extends StatefulWidget {
-  PdfListPage({Key key}) : super(key: key);
+class PdfListPage extends StatelessWidget {
+  PdfListPage(this.protoPdfDao, {Key key}) : super(key: key);
 
-  @override
-  _PdfListPageState createState() => _PdfListPageState();
-}
+  final ProtoPdfDao protoPdfDao;
 
-class _PdfListPageState extends State<PdfListPage> {
-  int _counter = 0;
+  Widget _createItem(final BuildContext context, final ProtoPdf deadline) {
+    final DateTime time = DateTime.fromMillisecondsSinceEpoch(deadline.creation);
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+    return PdfListItem(
+      protoPdfDao: protoPdfDao,
+      protoPdf: deadline,
+      onPressed: () => {}
+    );
+  }
+
+  Widget _createItems(BuildContext context) {
+    return StreamBuilder<List<ProtoPdf>>(
+      stream: protoPdfDao.findAllDeadlinesAsStream(),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) return ListView();
+
+        final tasks = snapshot.data;
+
+        return ListView.builder(
+          itemCount: tasks.length,
+          itemBuilder: (_, index) {
+            return _createItem(context, tasks[index]);
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -24,25 +43,48 @@ class _PdfListPageState extends State<PdfListPage> {
       appBar: AppBar(
         title: Text("PdfListTitle").tr(),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+      body: Builder(
+        builder: (context) =>
+            Align(
+                alignment: Alignment.topCenter,
+                child: _createItems(context)
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: () async {
+          await protoPdfDao.insertProtoPdf(ProtoPdf(
+            null,
+            "Untitled".tr(),
+            DateTime.now().millisecondsSinceEpoch,
+          ));
+        },
+        tooltip: 'Increment'.tr(),
         child: Icon(Icons.add),
       ),
+    );
+  }
+}
+
+class PdfListItem extends StatelessWidget {
+  const PdfListItem({
+    Key key,
+    @required this.protoPdfDao,
+    @required this.protoPdf,
+    @required this.onPressed
+  }) : super(key: key);
+
+  final ProtoPdfDao protoPdfDao;
+  final ProtoPdf protoPdf;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime time = DateTime.fromMillisecondsSinceEpoch(
+        protoPdf.creation);
+
+    return  ListTile(
+      title: Text(protoPdf.title),
+      onTap: onPressed,
     );
   }
 }

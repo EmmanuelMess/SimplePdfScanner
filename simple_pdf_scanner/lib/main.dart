@@ -16,12 +16,16 @@ Future<void> main() async {
         path: 'lib/l10n',
         fallbackLocale: Locale('en'),
         useOnlyLangCode: true,
-        child: SimplePdfScannerApp(),
+        child: SimplePdfScannerApp(database),
       )
   );
 }
 class SimplePdfScannerApp extends StatelessWidget {
-  // This widget is the root of your application.
+
+  final AppDatabase database;
+
+  const SimplePdfScannerApp(this.database, {Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +34,7 @@ class SimplePdfScannerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: PdfListPage(),
+      home: PdfListPage(database.protoPdfDao),
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
