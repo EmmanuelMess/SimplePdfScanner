@@ -1,8 +1,12 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:simple_pdf_scanner/db/dao/protopdf_dao.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
+
+import 'animation.dart';
+import 'camera.dart';
 
 class ImageListPage extends StatelessWidget {
   ImageListPage(this.protoPdfDao, {Key key}) : super(key: key);
@@ -55,11 +59,14 @@ class ImageListPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await protoPdfDao.insertProtoPdf(ProtoPdf(
-            null,
-            "Untitled".tr(),
-            DateTime.now().millisecondsSinceEpoch,
-          ));
+          final cameras = await availableCameras();
+          final firstCamera = cameras.first;
+          Navigator.push(
+            context,
+            AnimationHelper.slideRouteAnimation(
+                  (_, __, ___) => TakePictureScreen(camera: firstCamera),
+            ),
+          );
         },
         tooltip: 'TakePhoto'.tr(),
         child: Icon(Icons.photo_camera),
