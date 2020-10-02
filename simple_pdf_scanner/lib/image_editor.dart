@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class ImageEditorPage extends StatelessWidget {
   final String imagePath;
 
-  const ImageEditorPage({Key key, this.imagePath}) : super(key: key);
+  const ImageEditorPage( this.imagePath, {Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

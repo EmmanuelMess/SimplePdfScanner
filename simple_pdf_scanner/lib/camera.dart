@@ -93,7 +93,7 @@ class TakePicturePageState extends State<TakePicturePage> {
             Navigator.push(
               context,
               AnimationHelper.slideRouteAnimation(
-                    (_, __, ___) => ImageEditorPage(imagePath: path),
+                    (_, __, ___) => ImageEditorPage(path),
               ),
             );
           } catch(e) {

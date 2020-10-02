@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 import 'animation.dart';
 import 'camera.dart';
 import 'db/dao/image_dao.dart';
+import 'image_editor.dart';
 
 class ImageListPage extends StatelessWidget {
   ImageListPage(this.pdf, this.imageDao, {Key key}) : super(key: key);
@@ -17,9 +19,46 @@ class ImageListPage extends StatelessWidget {
   final ProtoPdf pdf;
   final ImageDao imageDao;
 
+  Widget _addPhotoItem(BuildContext context) {
+    return Center(
+      child: AspectRatio(
+        aspectRatio: sqrt(2) / 2, //Aspect ratio of A pages
+        child: GestureDetector(
+          child: Container(
+            child: const Icon(Icons.add, size: 48.0,),
+            decoration: const BoxDecoration(
+              shape: BoxShape.rectangle,
+              color: Colors.black12,
+            ),
+          ),
+          onTap: () async {
+            final cameras = await availableCameras();
+
+            Navigator.push(
+              context,
+              AnimationHelper.slideRouteAnimation(
+                    (_, __, ___) =>
+                    TakePicturePage(imageDao: imageDao,
+                        pdf: pdf,
+                        camera: cameras.first),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _createItem(final BuildContext context, final PdfImage image) {
     return Center(
-        child: ImageListItem(image, () => {}),
+      child: ImageListItem(image, () =>
+          Navigator.push(
+              context,
+              AnimationHelper.slideRouteAnimation(
+                      (_, __, ___) => ImageEditorPage(image.path)
+              )
+          ),
+      ),
     );
   }
 
@@ -35,10 +74,14 @@ class ImageListPage extends StatelessWidget {
 
         return GridView.builder(
           gridDelegate: delegate,
-          itemCount: tasks.length,
+          itemCount: tasks.length + 1,
           itemBuilder: (_, index) {
-            return _createItem(context, tasks[index]);
-          },
+            if (index < tasks.length) {
+              return _createItem(context, tasks[index]);
+            } else {
+              return _addPhotoItem(context);
+            }
+          }
         );
       },
     );
@@ -59,17 +102,10 @@ class ImageListPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final cameras = await availableCameras();
 
-          Navigator.push(
-            context,
-            AnimationHelper.slideRouteAnimation(
-                  (_, __, ___) => TakePicturePage(imageDao: imageDao, pdf: pdf, camera: cameras.first),
-            ),
-          );
         },
-        tooltip: 'TakePhoto'.tr(),
-        child: Icon(Icons.photo_camera),
+        tooltip: 'CreatePdf'.tr(),
+        child: Icon(Icons.picture_as_pdf),
       ),
     );
   }
