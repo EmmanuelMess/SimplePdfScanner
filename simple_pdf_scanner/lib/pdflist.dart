@@ -15,8 +15,6 @@ class PdfListPage extends StatelessWidget {
   final ImageDao imageDao;
 
   Widget _createItem(final BuildContext context, final ProtoPdf pdf) {
-    final DateTime time = DateTime.fromMillisecondsSinceEpoch(pdf.creation);
-
     return PdfListItem(
       protoPdfDao: protoPdfDao,
       protoPdf: pdf,
@@ -87,9 +85,6 @@ class PdfListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime time = DateTime.fromMillisecondsSinceEpoch(
-        protoPdf.creation);
-
     return  ListTile(
       title: Text(protoPdf.title),
       onTap: onPressed,
