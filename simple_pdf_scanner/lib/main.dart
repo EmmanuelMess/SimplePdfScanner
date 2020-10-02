@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_pdf_scanner/db/database.dart';
-import 'package:flutter/material.dart';
 import 'package:simple_pdf_scanner/pdflist.dart';
 
 Future<void> main() async {

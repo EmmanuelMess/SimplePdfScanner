@@ -1,6 +1,5 @@
 import 'package:floor/floor.dart';
 import 'package:simple_pdf_scanner/db/entity/image.dart';
-import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
 @dao
 abstract class ImageDao {
