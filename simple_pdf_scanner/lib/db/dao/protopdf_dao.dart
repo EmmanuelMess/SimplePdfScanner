@@ -13,5 +13,5 @@ abstract class ProtoPdfDao {
   Future<void> insertProtoPdf(ProtoPdf pdf);
 
   @Query('SELECT * FROM ProtoPdf ORDER BY ProtoPdf.creation ASC')
-  Stream<List<ProtoPdf>> findAllDeadlinesAsStream();
+  Stream<List<ProtoPdf>> findAllProtoPdfsAsStream();
 }

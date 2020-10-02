@@ -152,7 +152,7 @@ class _$ProtoPdfDao extends ProtoPdfDao {
   final DeletionAdapter<ProtoPdf> _protoPdfDeletionAdapter;
 
   @override
-  Stream<List<ProtoPdf>> findAllDeadlinesAsStream() {
+  Stream<List<ProtoPdf>> findAllProtoPdfsAsStream() {
     return _queryAdapter.queryListStream(
         'SELECT * FROM ProtoPdf ORDER BY ProtoPdf.creation ASC',
         queryableName: 'ProtoPdf',

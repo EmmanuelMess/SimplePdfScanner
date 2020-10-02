@@ -32,7 +32,7 @@ class PdfListPage extends StatelessWidget {
 
   Widget _createItems(BuildContext context) {
     return StreamBuilder<List<ProtoPdf>>(
-      stream: protoPdfDao.findAllDeadlinesAsStream(),
+      stream: protoPdfDao.findAllProtoPdfsAsStream(),
       builder: (_, snapshot) {
         if (!snapshot.hasData) return ListView();
 
