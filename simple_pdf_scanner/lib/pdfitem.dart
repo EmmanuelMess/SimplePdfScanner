@@ -64,7 +64,7 @@ class ImageListPage extends StatelessWidget {
           Navigator.push(
             context,
             AnimationHelper.slideRouteAnimation(
-                  (_, __, ___) => TakePictureScreen(imageDao: imageDao, pdf: pdf, camera: cameras.first),
+                  (_, __, ___) => TakePicturePage(imageDao: imageDao, pdf: pdf, camera: cameras.first),
             ),
           );
         },

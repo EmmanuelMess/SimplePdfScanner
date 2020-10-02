@@ -14,12 +14,12 @@ import 'db/dao/image_dao.dart';
 import 'db/entity/image.dart';
 import 'image_editor.dart';
 
-class TakePictureScreen extends StatefulWidget {
+class TakePicturePage extends StatefulWidget {
   final CameraDescription camera;
   final ImageDao imageDao;
   final ProtoPdf pdf;
 
-  const TakePictureScreen({
+  const TakePicturePage({
     Key key,
     @required this.imageDao,
     @required this.pdf,
@@ -27,10 +27,10 @@ class TakePictureScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  TakePictureScreenState createState() => TakePictureScreenState(imageDao, camera, pdf);
+  TakePicturePageState createState() => TakePicturePageState(imageDao, camera, pdf);
 }
 
-class TakePictureScreenState extends State<TakePictureScreen> {
+class TakePicturePageState extends State<TakePicturePage> {
   final ImageDao imageDao;
   final CameraDescription camera;
   final ProtoPdf pdf;
@@ -39,7 +39,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   Future<void> _initializeControllerFuture;
   Future<Directory> _applicationDocumentsDirectory;
 
-  TakePictureScreenState(this.imageDao, this.camera, this.pdf);
+  TakePicturePageState(this.imageDao, this.camera, this.pdf);
 
   @override
   void initState() {
@@ -95,7 +95,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             Navigator.push(
               context,
               AnimationHelper.slideRouteAnimation(
-                    (_, __, ___) => ImageEditorScreen(imagePath: path),
+                    (_, __, ___) => ImageEditorPage(imagePath: path),
               ),
             );
           } catch(e) {
