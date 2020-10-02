@@ -60,7 +60,6 @@ class ImageListPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final cameras = await availableCameras();
-          final firstCamera = cameras.first;
 
           Navigator.push(
             context,

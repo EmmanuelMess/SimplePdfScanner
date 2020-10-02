@@ -95,7 +95,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             Navigator.push(
               context,
               AnimationHelper.slideRouteAnimation(
-                    (_, __, ___) => DisplayPictureScreen(imagePath: path),
+                    (_, __, ___) => ImageEditorScreen(imagePath: path),
               ),
             );
           } catch(e) {
