@@ -4,5 +4,7 @@
   "Increment": "Increment",
   "Untitled": "Untitled",
   "TakePhoto": "Take photo",
-  "CreatePdf": "Create PDF"
+  "CreatePdf": "Create PDF",
+  "NoItems": "No Items",
+  "NumberImages": "{} Images"
 }

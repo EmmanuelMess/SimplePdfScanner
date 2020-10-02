@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -7,6 +10,7 @@ import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 import 'package:simple_pdf_scanner/pdfitem.dart';
 
 import 'animation.dart';
+import 'db/entity/image.dart';
 
 class PdfListPage extends StatelessWidget {
   PdfListPage(this.protoPdfDao, this.imageDao, {Key key}) : super(key: key);
@@ -17,7 +21,8 @@ class PdfListPage extends StatelessWidget {
   Widget _createItem(final BuildContext context, final ProtoPdf pdf) {
     return PdfListItem(
       protoPdfDao: protoPdfDao,
-      protoPdf: pdf,
+      imageDao: imageDao,
+      pdf: pdf,
       onPressed: () => Navigator.push(
         context,
         AnimationHelper.slideRouteAnimation((_, __, ___) => ImageListPage(pdf, imageDao)),
@@ -75,18 +80,28 @@ class PdfListItem extends StatelessWidget {
   const PdfListItem({
     Key key,
     @required this.protoPdfDao,
-    @required this.protoPdf,
+    @required this.imageDao,
+    @required this.pdf,
     @required this.onPressed
   }) : super(key: key);
 
   final ProtoPdfDao protoPdfDao;
-  final ProtoPdf protoPdf;
+  final ImageDao imageDao;
+  final ProtoPdf pdf;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return  ListTile(
-      title: Text(protoPdf.title),
+    return ListTile(
+      title: Text(pdf.title),
+      subtitle: StreamBuilder<List<PdfImage>>(
+        stream: imageDao.findAllImagesAsStream(pdf.id),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return Text("");
+
+          return Text("NumberImages").tr(args: [snapshot.data.length.toString()]);
+        },
+      ),
       onTap: onPressed,
     );
   }

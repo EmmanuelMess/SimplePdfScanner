@@ -63,7 +63,11 @@ class ImageListPage extends StatelessWidget {
   }
 
   Widget _createItems(BuildContext context) {
-    final delegate = SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3);
+    final delegate = SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3,
+      mainAxisSpacing: 8.0,
+      crossAxisSpacing: 16.0,
+    );
 
     return StreamBuilder<List<PdfImage>>(
       stream: imageDao.findAllImagesAsStream(pdf.id),

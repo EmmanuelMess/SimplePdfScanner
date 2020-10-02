@@ -3,5 +3,8 @@
   "PdfListTitle": "Lista de PDFs",
   "Increment": "Incrementar",
   "Untitled": "Sin titulo",
-  "TakePhoto": "Tomar photo"
+  "TakePhoto": "Tomar photo",
+  "CreatePdf": "Crear PDF",
+  "NoItems": "Ningun item",
+  "NumberImages": "{} imagenes"
 }
