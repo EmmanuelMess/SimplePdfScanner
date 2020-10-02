@@ -24,6 +24,7 @@ if (flutterVersionName == null) {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 28
@@ -52,6 +53,11 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 flutter {
@@ -60,4 +66,13 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    def camerax_version = "1.0.0-beta07"
+    // CameraX core library using camera2 implementation
+    implementation "androidx.camera:camera-camera2:$camerax_version"
+    // CameraX Lifecycle Library
+    implementation "androidx.camera:camera-lifecycle:$camerax_version"
+    // CameraX View class
+    implementation "androidx.camera:camera-view:1.0.0-alpha14"
 }

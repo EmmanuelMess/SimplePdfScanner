@@ -1,15 +1,14 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:simple_pdf_scanner/camera.dart';
 import 'package:simple_pdf_scanner/db/entity/image.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
 import 'animation.dart';
-import 'camera.dart';
 import 'db/dao/image_dao.dart';
 import 'image_editor.dart';
 
@@ -32,15 +31,11 @@ class ImageListPage extends StatelessWidget {
             ),
           ),
           onTap: () async {
-            final cameras = await availableCameras();
-
             Navigator.push(
               context,
               AnimationHelper.slideRouteAnimation(
                     (_, __, ___) =>
-                    TakePicturePage(imageDao: imageDao,
-                        pdf: pdf,
-                        camera: cameras.first),
+                    TakePicturePage(imageDao: imageDao, pdf: pdf),
               ),
             );
           },

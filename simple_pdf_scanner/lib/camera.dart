@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:camera/camera.dart';
+import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' show join;
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
@@ -13,7 +13,6 @@ import 'db/entity/image.dart';
 import 'image_editor.dart';
 
 class TakePicturePage extends StatefulWidget {
-  final CameraDescription camera;
   final ImageDao imageDao;
   final ProtoPdf pdf;
 
@@ -21,85 +20,93 @@ class TakePicturePage extends StatefulWidget {
     Key key,
     @required this.imageDao,
     @required this.pdf,
-    @required this.camera,
   }) : super(key: key);
 
   @override
-  TakePicturePageState createState() => TakePicturePageState(imageDao, camera, pdf);
+  State<StatefulWidget> createState() => TakePicturePageState(imageDao, pdf);
+
 }
 
-class TakePicturePageState extends State<TakePicturePage> {
+class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObserver {
   final ImageDao imageDao;
-  final CameraDescription camera;
   final ProtoPdf pdf;
 
-  CameraController _controller;
-  Future<void> _initializeControllerFuture;
-  Future<Directory> _applicationDocumentsDirectory;
+  Future<void> promisedActivity;
 
-  TakePicturePageState(this.imageDao, this.camera, this.pdf);
+  TakePicturePageState(this.imageDao, this.pdf);
+
+  String _path;
+  bool _resumed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(
-      camera,
-      ResolutionPreset.medium,
-      enableAudio: false,
+
+    promisedActivity = _startActivity();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  Future<void> _startActivity() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    setState(() {
+      _path = join(documentsDir.path, '${DateTime.now()}.jpg');
+    });
+
+    final _activity = AndroidIntent(
+        action: 'android.intent.action.default',
+        package: 'com.emmanuelmess.simple_pdf_scanner',
+        componentName: 'com.emmanuelmess.simple_pdf_scanner.PhotoActivity',
+        arguments: {"file_path": _path}
     );
-    _initializeControllerFuture = _controller.initialize();
-    _applicationDocumentsDirectory = getApplicationDocumentsDirectory();
+    return _activity.launch();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed) {
+      setState(() {
+        _resumed = true;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if(_resumed) {
+      _saveImageToDatabase(context);
+    }
+
     return Scaffold(
-      body: FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.camera_alt),
-        onPressed: () async {
-          try {
-            final documentsDir = await _applicationDocumentsDirectory;
-            final path = join(documentsDir.path, '${DateTime.now()}.png');
+      body: Center(child: CircularProgressIndicator())
+    );
+  }
 
-            await _initializeControllerFuture;
-            await _controller.takePicture(path);
+  Future<void> _saveImageToDatabase(BuildContext context) async {
+    if(! await File(_path).exists()) {
+      Navigator.pop(context);
+      return;
+    }
 
-            final lastPositionImage = await imageDao.lastPosition(pdf.id);
-            final lastPosition = lastPositionImage == null? 0 : lastPositionImage.position;
+    final lastPositionImage = await imageDao.lastPosition(pdf.id);
+    final lastPosition = lastPositionImage == null? 0 : lastPositionImage.position;
 
-            await imageDao.insertImage(PdfImage(
-              null,
-              pdf.id,
-              path,
-              lastPosition + 1,
-            ));
+    await imageDao.insertImage(PdfImage(
+      null,
+      pdf.id,
+      _path,
+      lastPosition + 1,
+    ));
 
-            Navigator.push(
-              context,
-              AnimationHelper.slideRouteAnimation(
-                    (_, __, ___) => ImageEditorPage(path),
-              ),
-            );
-          } catch(e) {
-            print(e);
-          }
-        },
+    Navigator.pushReplacement(
+      context,
+      AnimationHelper.slideRouteAnimation(
+            (_, __, ___) => ImageEditorPage(_path),
       ),
     );
   }
