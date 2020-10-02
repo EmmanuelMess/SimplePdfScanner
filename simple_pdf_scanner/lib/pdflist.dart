@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:simple_pdf_scanner/db/dao/image_dao.dart';
 import 'package:simple_pdf_scanner/db/dao/protopdf_dao.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 import 'package:simple_pdf_scanner/pdfitem.dart';
@@ -8,9 +9,10 @@ import 'package:simple_pdf_scanner/pdfitem.dart';
 import 'animation.dart';
 
 class PdfListPage extends StatelessWidget {
-  PdfListPage(this.protoPdfDao, {Key key}) : super(key: key);
+  PdfListPage(this.protoPdfDao, this.imageDao, {Key key}) : super(key: key);
 
   final ProtoPdfDao protoPdfDao;
+  final ImageDao imageDao;
 
   Widget _createItem(final BuildContext context, final ProtoPdf pdf) {
     final DateTime time = DateTime.fromMillisecondsSinceEpoch(pdf.creation);
@@ -20,7 +22,7 @@ class PdfListPage extends StatelessWidget {
       protoPdf: pdf,
       onPressed: () => Navigator.push(
         context,
-        AnimationHelper.slideRouteAnimation((_, __, ___) => ImageListPage(protoPdfDao)),
+        AnimationHelper.slideRouteAnimation((_, __, ___) => ImageListPage(pdf, imageDao)),
       ),
     );
   }

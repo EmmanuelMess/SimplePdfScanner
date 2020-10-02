@@ -7,31 +7,48 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
+import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
 import 'animation.dart';
+import 'db/dao/image_dao.dart';
+import 'db/entity/image.dart';
 import 'image_editor.dart';
 
 class TakePictureScreen extends StatefulWidget {
   final CameraDescription camera;
+  final ImageDao imageDao;
+  final ProtoPdf pdf;
 
   const TakePictureScreen({
     Key key,
+    @required this.imageDao,
+    @required this.pdf,
     @required this.camera,
   }) : super(key: key);
 
   @override
-  TakePictureScreenState createState() => TakePictureScreenState();
+  TakePictureScreenState createState() => TakePictureScreenState(imageDao, camera, pdf);
 }
 
 class TakePictureScreenState extends State<TakePictureScreen> {
+  final ImageDao imageDao;
+  final CameraDescription camera;
+  final ProtoPdf pdf;
+
   CameraController _controller;
   Future<void> _initializeControllerFuture;
   Future<Directory> _applicationDocumentsDirectory;
 
+  TakePictureScreenState(this.imageDao, this.camera, this.pdf);
+
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.max);
+    _controller = CameraController(
+      camera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
     _initializeControllerFuture = _controller.initialize();
     _applicationDocumentsDirectory = getApplicationDocumentsDirectory();
   }
@@ -49,20 +66,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return Stack(
-              children: [
-                CameraPreview(_controller),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: IconButton(
-                    icon: SvgPicture.asset(
-                      'lib/drawable/camera_button.svg',
-                    ),
-                    onPressed: () => {},
-                  ),
-                ),
-              ],
-            );
+            return CameraPreview(_controller);
           } else {
             return Center(child: CircularProgressIndicator());
           }
@@ -71,72 +75,34 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.camera_alt),
         onPressed: () async {
-          await _initializeControllerFuture;
+          try {
+            final documentsDir = await _applicationDocumentsDirectory;
+            final path = join(documentsDir.path, '${DateTime.now()}.png');
 
-          final path = join(
-            (await _applicationDocumentsDirectory).path,
-            '${DateTime.now()}.png',
-          );
+            await _initializeControllerFuture;
+            await _controller.takePicture(path);
 
-          await _controller.takePicture(path);
+            final lastPositionImage = await imageDao.lastPosition(pdf.id);
+            final lastPosition = lastPositionImage == null? 0 : lastPositionImage.position;
 
-          Navigator.push(
-            context,
-            AnimationHelper.slideRouteAnimation(
-                  (_, __, ___) => DisplayPictureScreen(imagePath: path),
-            ),
-          );
+            await imageDao.insertImage(PdfImage(
+              null,
+              pdf.id,
+              path,
+              lastPosition + 1,
+            ));
+
+            Navigator.push(
+              context,
+              AnimationHelper.slideRouteAnimation(
+                    (_, __, ___) => DisplayPictureScreen(imagePath: path),
+              ),
+            );
+          } catch(e) {
+            print(e);
+          }
         },
       ),
     );
   }
-}
-
-class Sky extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    var rect = Offset.zero & size;
-    var gradient = RadialGradient(
-      center: const Alignment(0.7, -0.6),
-      radius: 0.2,
-      colors: [const Color(0xFFFFFF00), const Color(0xFF0099FF)],
-      stops: [0.4, 1.0],
-    );
-    canvas.drawRect(
-      rect,
-      Paint()..shader = gradient.createShader(rect),
-    );
-  }
-
-  @override
-  SemanticsBuilderCallback get semanticsBuilder {
-    return (Size size) {
-      // Annotate a rectangle containing the picture of the sun
-      // with the label "Sun". When text to speech feature is enabled on the
-      // device, a user will be able to locate the sun on this picture by
-      // touch.
-      var rect = Offset.zero & size;
-      var width = size.shortestSide * 0.4;
-      rect = const Alignment(0.8, -0.9).inscribe(Size(width, width), rect);
-      return [
-        CustomPainterSemantics(
-          rect: rect,
-          properties: SemanticsProperties(
-            label: 'Sun',
-            textDirection: TextDirection.ltr,
-          ),
-        ),
-      ];
-    };
-  }
-
-  // Since this Sky painter has no fields, it always paints
-  // the same thing and semantics information is the same.
-  // Therefore we return false here. If we had fields (set
-  // from the constructor) then we would return true if any
-  // of them differed from the same fields on the oldDelegate.
-  @override
-  bool shouldRepaint(Sky oldDelegate) => false;
-  @override
-  bool shouldRebuildSemantics(Sky oldDelegate) => false;
 }

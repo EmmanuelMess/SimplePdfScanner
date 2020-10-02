@@ -62,6 +62,8 @@ class _$AppDatabase extends AppDatabase {
 
   ProtoPdfDao _protoPdfDaoInstance;
 
+  ImageDao _imageDaoInstance;
+
   Future<sqflite.Database> open(String path, List<Migration> migrations,
       [Callback callback]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
@@ -81,6 +83,8 @@ class _$AppDatabase extends AppDatabase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `ProtoPdf` (`id` INTEGER, `title` TEXT, `creation` INTEGER, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER, `path` TEXT, `position` INTEGER, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -91,6 +95,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   ProtoPdfDao get protoPdfDao {
     return _protoPdfDaoInstance ??= _$ProtoPdfDao(database, changeListener);
+  }
+
+  @override
+  ImageDao get imageDao {
+    return _imageDaoInstance ??= _$ImageDao(database, changeListener);
   }
 }
 
@@ -164,5 +173,57 @@ class _$ProtoPdfDao extends ProtoPdfDao {
   @override
   Future<void> deleteProtoPdfById(ProtoPdf pdf) async {
     await _protoPdfDeletionAdapter.delete(pdf);
+  }
+}
+
+class _$ImageDao extends ImageDao {
+  _$ImageDao(this.database, this.changeListener)
+      : _queryAdapter = QueryAdapter(database, changeListener),
+        _pdfImageInsertionAdapter = InsertionAdapter(
+            database,
+            'PdfImage',
+            (PdfImage item) => <String, dynamic>{
+                  'id': item.id,
+                  'proto_pdf': item.protoPdf,
+                  'path': item.path,
+                  'position': item.position
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  static final _pdfImageMapper = (Map<String, dynamic> row) => PdfImage(
+      row['id'] as int,
+      row['proto_pdf'] as int,
+      row['path'] as String,
+      row['position'] as int);
+
+  final InsertionAdapter<PdfImage> _pdfImageInsertionAdapter;
+
+  @override
+  Future<PdfImage> lastPosition(int protoPdfId) async {
+    return _queryAdapter.query(
+        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf AND PdfImage.position=(SELECT MAX(PdfImage.position) FROM PdfImage)',
+        arguments: <dynamic>[protoPdfId],
+        mapper: _pdfImageMapper);
+  }
+
+  @override
+  Stream<List<PdfImage>> findAllImagesAsStream(int protoPdfId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
+        arguments: <dynamic>[protoPdfId],
+        queryableName: 'PdfImage',
+        isView: false,
+        mapper: _pdfImageMapper);
+  }
+
+  @override
+  Future<void> insertImage(PdfImage image) async {
+    await _pdfImageInsertionAdapter.insert(image, OnConflictStrategy.abort);
   }
 }

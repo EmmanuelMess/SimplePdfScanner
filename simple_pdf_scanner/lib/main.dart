@@ -34,7 +34,7 @@ class SimplePdfScannerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: PdfListPage(database.protoPdfDao),
+      home: PdfListPage(database.protoPdfDao, database.imageDao),
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,

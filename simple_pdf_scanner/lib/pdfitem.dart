@@ -1,40 +1,40 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:simple_pdf_scanner/db/dao/protopdf_dao.dart';
+import 'package:simple_pdf_scanner/db/entity/image.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
 import 'animation.dart';
 import 'camera.dart';
+import 'db/dao/image_dao.dart';
 
 class ImageListPage extends StatelessWidget {
-  ImageListPage(this.protoPdfDao, {Key key}) : super(key: key);
+  ImageListPage(this.pdf, this.imageDao, {Key key}) : super(key: key);
 
-  final ProtoPdfDao protoPdfDao;
+  final ProtoPdf pdf;
+  final ImageDao imageDao;
 
-  Widget _createItem(final BuildContext context, final String image) {
+  Widget _createItem(final BuildContext context, final PdfImage image) {
     return Center(
         child: ImageListItem(image, () => {}),
     );
   }
 
-  final Stream<List<String>> _images = (() async* {
-    yield ["sfs", "fsf"];
-  })();
-
   Widget _createItems(BuildContext context) {
-    return StreamBuilder<List<String>>(
-      stream: _images,
+    final delegate = SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3);
+
+    return StreamBuilder<List<PdfImage>>(
+      stream: imageDao.findAllImagesAsStream(pdf.id),
       builder: (_, snapshot) {
-        if (!snapshot.hasData) return ListView();
+        if (!snapshot.hasData) return GridView(gridDelegate: delegate);
 
         final tasks = snapshot.data;
 
         return GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-          ),
+          gridDelegate: delegate,
           itemCount: tasks.length,
           itemBuilder: (_, index) {
             return _createItem(context, tasks[index]);
@@ -61,10 +61,11 @@ class ImageListPage extends StatelessWidget {
         onPressed: () async {
           final cameras = await availableCameras();
           final firstCamera = cameras.first;
+
           Navigator.push(
             context,
             AnimationHelper.slideRouteAnimation(
-                  (_, __, ___) => TakePictureScreen(camera: firstCamera),
+                  (_, __, ___) => TakePictureScreen(imageDao: imageDao, pdf: pdf, camera: cameras.first),
             ),
           );
         },
@@ -82,13 +83,13 @@ class ImageListItem extends StatelessWidget {
       {Key key}
   ) : super(key: key);
 
-  final String image;
+  final PdfImage image;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return  ListTile(
-      title: Text(this.image),
+      title: Image.file(File(this.image.path)),
       onTap: onPressed,
     );
   }
