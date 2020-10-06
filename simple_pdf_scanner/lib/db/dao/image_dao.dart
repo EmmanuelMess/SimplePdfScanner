@@ -11,4 +11,7 @@ abstract class ImageDao {
 
   @Query('SELECT * FROM PdfImage WHERE :protoPdfId=PdfImage.proto_pdf ORDER BY PdfImage.position ASC')
   Stream<List<PdfImage>> findAllImagesAsStream(int protoPdfId);
+
+  @Query('SELECT * FROM PdfImage WHERE :protoPdfId=PdfImage.proto_pdf ORDER BY PdfImage.position ASC')
+  Future<List<PdfImage>> findAllImages(int protoPdfId);
 }

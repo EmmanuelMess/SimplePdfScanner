@@ -223,6 +223,14 @@ class _$ImageDao extends ImageDao {
   }
 
   @override
+  Future<List<PdfImage>> findAllImages(int protoPdfId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
+        arguments: <dynamic>[protoPdfId],
+        mapper: _pdfImageMapper);
+  }
+
+  @override
   Future<void> insertImage(PdfImage image) async {
     await _pdfImageInsertionAdapter.insert(image, OnConflictStrategy.abort);
   }

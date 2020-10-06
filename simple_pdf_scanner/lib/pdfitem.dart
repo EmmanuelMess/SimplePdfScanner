@@ -1,15 +1,22 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'package:pdf/pdf.dart' as pdfcreator;
+import 'package:pdf/widgets.dart' as pdfcreator;
+import 'package:printing/printing.dart' as pdfcreator;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:simple_pdf_scanner/camera.dart';
-import 'package:simple_pdf_scanner/db/entity/image.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 
 import 'animation.dart';
 import 'db/dao/image_dao.dart';
+import 'db/entity/image.dart';
 import 'image_editor.dart';
 
 class ImageListPage extends StatelessWidget {
@@ -101,12 +108,57 @@ class ImageListPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          final createdpdf = await _createPdf();
 
+          Navigator.push(
+            context,
+            AnimationHelper.slideRouteAnimation(
+                  (_, __, ___) =>
+                      ShowPdf(pdf.title, createdpdf),
+            ),
+          );
         },
         tooltip: 'CreatePdf'.tr(),
         child: Icon(Icons.picture_as_pdf),
       ),
     );
+  }
+
+  Future<Uint8List> _createPdf() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final file = File(join(documentsDir.path, '${pdf.title}.pdf'));
+    final doc = pdfcreator.Document();
+    final images = await imageDao.findAllImages(pdf.id);
+
+    for (final image in images) {
+      final pdfimage = pdfcreator.PdfImage.file(
+        doc.document,
+        bytes: File(image.path).readAsBytesSync(),
+      );
+
+      doc.addPage(pdfcreator.Page(
+          build: (pdfcreator.Context context) {
+            return pdfcreator.Center(
+              child: pdfcreator.Image(pdfimage),
+            ); // Center
+          })); // Page
+    }
+
+    if(images.isEmpty) {
+      doc.addPage(pdfcreator.Page(
+          build: (context) {
+            return pdfcreator.Center(
+              child: pdfcreator.Text(pdf.title),
+            );
+          }
+      ));
+    }
+
+    final finishedpdf = doc.save();
+
+    file.writeAsBytesSync(finishedpdf);
+
+    return finishedpdf;
   }
 }
 
@@ -125,6 +177,23 @@ class ImageListItem extends StatelessWidget {
     return  ListTile(
       title: Image.file(File(this.image.path)),
       onTap: onPressed,
+    );
+  }
+}
+
+class ShowPdf extends StatelessWidget {
+  const ShowPdf(this.title, this.pdf, {Key key}) : super(key: key);
+
+  final String title;
+  final Uint8List pdf;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: pdfcreator.PdfPreview(
+        build: (format) => this.pdf,
+      ),
     );
   }
 }
