@@ -5,12 +5,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
-import org.opencv.core.Mat
-import org.opencv.core.MatOfPoint
-import org.opencv.core.Size
-import org.opencv.imgproc.Imgproc
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc.*
 import java.io.ByteArrayOutputStream
+import kotlin.math.abs
 
 
 object MainProcessor {
@@ -54,6 +52,27 @@ object MainProcessor {
         val edged = Mat()
         Canny(grey, edged, 75.0, 200.0)
 
-        return edged
+        val contourList = ArrayList<MatOfPoint>()
+        findContours(edged, contourList, Mat(), RETR_LIST, CHAIN_APPROX_SIMPLE)
+
+        val paperContour = contourList
+                .asSequence()
+                .sortedByDescending {
+                    contourArea(it)
+                }
+                .filter { contour ->
+                    val contourFloat = MatOfPoint2f(*contour.toArray())
+
+                    val perimeter = arcLength(contourFloat, true)
+                    val approx = MatOfPoint2f()
+                    approxPolyDP(contourFloat, approx, 0.02 * perimeter, true)
+
+                    return@filter approx.elemSize() == 4L
+                }
+                .first()
+
+        drawContours(resizedInput, listOf(paperContour), -1, Scalar(0.0, 255.0, 0.0), 2)
+
+        return resizedInput
     }
 }
