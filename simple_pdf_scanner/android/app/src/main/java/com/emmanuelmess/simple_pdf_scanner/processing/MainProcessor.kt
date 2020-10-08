@@ -136,13 +136,21 @@ object MainProcessor {
                 }
             }
         }
-
+        
         for(square in squares) {
-            val sq = MatOfPoint(*square.toArray())
-            polylines(resizedInput, listOf(sq),true, Scalar(0.0,255.0,0.0), 3, LINE_AA)
+            val s = square
+                    .toList()
+                    .map { 
+                        it.set(doubleArrayOf(it.x * 1/r, it.y * 1/r))
+                        it
+                    }
+                    .toTypedArray()
+            
+            val sq = MatOfPoint(*s)
+            polylines(input, listOf(sq),true, Scalar(0.0,255.0,0.0), 3, LINE_AA)
         }
         
-        return resizedInput
+        return input
     }
 
     private fun angle(pt1: Point, pt2: Point, pt0: Point): Double {
