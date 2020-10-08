@@ -1,8 +1,10 @@
 package com.emmanuelmess.simple_pdf_scanner.processing
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
@@ -10,36 +12,58 @@ import org.opencv.core.Core.mixChannels
 import org.opencv.core.CvType.CV_8U
 import org.opencv.imgproc.Imgproc.*
 import java.io.ByteArrayOutputStream
+import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
 
 object MainProcessor {
-    fun startProcessing(path: String): ByteArray {
-        OpenCVLoader.initDebug()//TODO use async
 
-        val bitmap = BitmapFactory.decodeFile(path, BitmapFactory.Options().apply {
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-        })
+    fun startProcessing(context: Context, path: String, callback: (ByteArray) -> Unit) {
+        init(context) {
+            val bitmap = BitmapFactory.decodeFile(path, BitmapFactory.Options().apply {
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            })
 
-        val img = Mat()
-        Utils.bitmapToMat(bitmap, img)
-        
-        val imgResult = work(img)
-        
-        val imgBitmap = Bitmap.createBitmap(imgResult.cols(), imgResult.rows(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(imgResult, imgBitmap)
+            val img = Mat()
+            Utils.bitmapToMat(bitmap, img)
 
-        val rotated = Bitmap.createBitmap(
-                imgBitmap, 0, 0, imgBitmap.width, imgBitmap.height,
-                Matrix().apply { postRotate(90f) }, true)
+            val imgResult = work(img)
 
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        rotated.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
+            val imgBitmap = Bitmap.createBitmap(imgResult.cols(), imgResult.rows(), Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(imgResult, imgBitmap)
 
-        return byteArray
+            val rotated = Bitmap.createBitmap(
+                    imgBitmap, 0, 0, imgBitmap.width, imgBitmap.height,
+                    Matrix().apply { postRotate(90f) }, true)
+
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            rotated.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+            val byteArray = byteArrayOutputStream.toByteArray()
+
+            callback(byteArray)
+        }
+    }
+
+    private fun init(context: Context, callback: () -> Unit) {
+        if(false) {
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, context,
+                    object : BaseLoaderCallback(context) {
+                        override fun onManagerConnected(status: Int) {
+                            when (status) {
+                                SUCCESS -> callback()
+                                else -> super.onManagerConnected(status)
+                            }
+                        }
+                    }
+            )
+        } else {
+            thread {
+                OpenCVLoader.initDebug()
+                callback()
+            }
+        }
     }
 
     private fun work(input: Mat): Mat {

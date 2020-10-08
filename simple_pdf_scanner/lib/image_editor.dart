@@ -21,7 +21,7 @@ class ImageEditorPage extends StatelessWidget {
       body: FutureBuilder(
         future: processFuture,
         builder: (context, snapshot) {
-          if(snapshot.connectionState != ConnectionState.done) {
+          if(!snapshot.hasData) {
             return Stack(children: [
               Image.file(File(imagePath)),
               Center(child: CircularProgressIndicator()),

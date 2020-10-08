@@ -15,10 +15,13 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
                 .setMethodCallHandler { call, result ->
                     if (call.method == "process") {
-                        val image = MainProcessor.startProcessing(call.arguments as String)
-                        result.success(image)
+                        MainProcessor.startProcessing(this, call.arguments as String) { image ->
+                            runOnUiThread {
+                                result.success(image)
+                            }
+                        }
                     } else {
-                        result.notImplemented();
+                        result.notImplemented()
                     }
                 }
     }
