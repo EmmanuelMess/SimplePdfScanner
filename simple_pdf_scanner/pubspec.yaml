@@ -27,6 +27,7 @@ dependencies:
   android_intent: '>=0.3.0+0 <2.0.0'
   path_provider: ^1.6.18
   path: ^1.7.0
+  image: ^2.1.18
 
   pdf: ^1.11.2
   printing: ^3.6.1

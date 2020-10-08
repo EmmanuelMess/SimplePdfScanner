@@ -175,7 +175,7 @@ class ImageListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  ListTile(
-      title: Image.file(File(this.image.path)),
+      title: Image.file(File(this.image.thumb_path)),
       onTap: onPressed,
     );
   }

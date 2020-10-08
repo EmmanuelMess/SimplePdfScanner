@@ -19,7 +19,9 @@ class PdfImage {
 
   final String path;
 
+  final String thumb_path;
+
   final int position;
 
-  PdfImage(this.id, this.protoPdf, this.path, this.position);
+  PdfImage(this.id, this.protoPdf, this.path, this.thumb_path, this.position);
 }

@@ -84,7 +84,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `ProtoPdf` (`id` INTEGER, `title` TEXT, `creation` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER, `path` TEXT, `position` INTEGER, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER, `path` TEXT, `thumb_path` TEXT, `position` INTEGER, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -186,6 +186,7 @@ class _$ImageDao extends ImageDao {
                   'id': item.id,
                   'proto_pdf': item.protoPdf,
                   'path': item.path,
+                  'thumb_path': item.thumb_path,
                   'position': item.position
                 },
             changeListener);
@@ -200,6 +201,7 @@ class _$ImageDao extends ImageDao {
       row['id'] as int,
       row['proto_pdf'] as int,
       row['path'] as String,
+      row['thumb_path'] as String,
       row['position'] as int);
 
   final InsertionAdapter<PdfImage> _pdfImageInsertionAdapter;

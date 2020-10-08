@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
@@ -35,7 +36,9 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
 
   TakePicturePageState(this.imageDao, this.pdf);
 
+  String _name;
   String _path;
+  String _thumbpath;
   bool _resumed = false;
 
   @override
@@ -49,7 +52,9 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
   Future<void> _startActivity() async {
     final documentsDir = await getApplicationDocumentsDirectory();
     setState(() {
-      _path = join(documentsDir.path, '${DateTime.now()}.jpg');
+      _name = '${DateTime.now()}.jpg';
+      _path = join(documentsDir.path, _name);
+      _thumbpath = join(documentsDir.path, 'thumb-$_name');
     });
 
     final _activity = AndroidIntent(
@@ -88,10 +93,17 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
   }
 
   Future<void> _saveImageToDatabase(BuildContext context) async {
-    if(! await File(_path).exists()) {
+    final imageFile = File(_path);
+
+    if(!await imageFile.exists()) {
       Navigator.pop(context);
       return;
     }
+
+    var image = decodeImage(imageFile.readAsBytesSync());
+    var thumbnail = copyResize(image, height: 250);
+    File(_thumbpath).writeAsBytesSync(encodeJpg(thumbnail));
+
 
     final lastPositionImage = await imageDao.lastPosition(pdf.id);
     final lastPosition = lastPositionImage == null? 0 : lastPositionImage.position;
@@ -100,6 +112,7 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
       null,
       pdf.id,
       _path,
+      _thumbpath,
       lastPosition + 1,
     ));
 
