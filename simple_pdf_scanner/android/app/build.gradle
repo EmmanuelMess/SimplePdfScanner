@@ -78,5 +78,5 @@ dependencies {
     implementation "androidx.camera:camera-view:1.0.0-alpha14"
 
     //OpenCV
-    implementation 'com.quickbirdstudios:opencv:3.4.1'
+    implementation 'com.quickbirdstudios:opencv:4.3.0'
 }
