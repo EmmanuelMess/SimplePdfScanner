@@ -44,6 +44,17 @@ android {
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-frtti -fexceptions"
+                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+                arguments.addAll([
+                        "-DOpenCV_DIR=" + opencvsdk + "/sdk/native",
+                        "-DANDROID_STL=c++_shared"
+                ])
+            }
+        }
     }
 
     buildTypes {
@@ -58,6 +69,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.10.2"
+        }
+    }
 }
 
 flutter {
@@ -65,6 +83,8 @@ flutter {
 }
 
 dependencies {
+    implementation project(path: ':opencv')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
@@ -76,7 +96,4 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     // CameraX View class
     implementation "androidx.camera:camera-view:1.0.0-alpha14"
-
-    //OpenCV
-    implementation 'com.quickbirdstudios:opencv:4.3.0'
 }

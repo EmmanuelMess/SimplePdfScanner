@@ -2,6 +2,7 @@ package com.emmanuelmess.simple_pdf_scanner
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -118,9 +119,9 @@ class PhotoActivity : FlutterActivity() {
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                val camera = cameraProvider.bindToLifecycle(
                         this, cameraSelector, preview, imageCapture)
-
+                camera.cameraControl.enableTorch(true)
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }

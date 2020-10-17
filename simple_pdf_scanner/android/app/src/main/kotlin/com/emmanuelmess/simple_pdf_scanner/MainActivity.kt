@@ -15,7 +15,7 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
                 .setMethodCallHandler { call, result ->
                     if (call.method == "process") {
-                        MainProcessor.startProcessing(this, call.arguments as String) { image ->
+                        MainProcessor.startProcessing(call.arguments as String) { image ->
                             runOnUiThread {
                                 result.success(image)
                             }
