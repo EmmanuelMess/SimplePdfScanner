@@ -131,9 +131,8 @@ class ImageListPage extends StatelessWidget {
     final images = await imageDao.findAllImages(pdf.id);
 
     for (final image in images) {
-      final pdfimage = pdfcreator.PdfImage.file(
-        doc.document,
-        bytes: File(image.path).readAsBytesSync(),
+      final pdfimage = pdfcreator.MemoryImage(
+        File(image.path).readAsBytesSync(),
       );
 
       doc.addPage(pdfcreator.Page(
@@ -154,7 +153,7 @@ class ImageListPage extends StatelessWidget {
       ));
     }
 
-    final finishedpdf = doc.save();
+    final finishedpdf = await doc.save();
 
     file.writeAsBytesSync(finishedpdf);
 

@@ -6,13 +6,14 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
-import kotlinx.android.synthetic.main.activity_photo.*
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -46,7 +47,7 @@ class PhotoActivity : FlutterActivity() {
         }
         
         // Set up the listener for take photo button
-        camera_capture_button.setOnClickListener { takePhoto() }
+        findViewById<View>(R.id.camera_capture_button).setOnClickListener { takePhoto() }
 
         filepath = intent.getStringExtra(PHOTO_PATH_ARG)
 
@@ -105,7 +106,7 @@ class PhotoActivity : FlutterActivity() {
             val preview = Preview.Builder()
                     .build()
                     .also {
-                        it.setSurfaceProvider(viewFinder.createSurfaceProvider())
+                        it.setSurfaceProvider(findViewById<PreviewView>(R.id.viewFinder).surfaceProvider)
                     }
 
             imageCapture = ImageCapture.Builder()
