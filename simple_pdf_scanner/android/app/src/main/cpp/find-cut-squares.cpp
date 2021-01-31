@@ -136,13 +136,71 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares ) {
     }
 }
 
+static Mat removeShadows(const Mat& image) {
+    Mat rgb_planes[3];
+    split(image, rgb_planes);
+    Mat dilatation;
+    Mat blurred;
+    Mat difference;
+    Mat rgb_result[3];
+
+    for(int i = 0; i < 3; i++) {
+        Mat dilationKernel = getStructuringElement( MORPH_RECT, Size(9, 9));
+
+        dilate(rgb_planes[i], dilatation, dilationKernel);
+
+        medianBlur(dilatation, blurred, 21);
+
+        absdiff(rgb_planes[i], blurred, difference);
+        subtract(Scalar(255), difference, difference);
+
+        normalize(difference, rgb_result[i], 0, 255, NORM_MINMAX, CV_8UC1);
+    }
+
+    Mat result;
+    merge(rgb_result, 3, result);
+
+    return result;
+}
+
+const float PROCESS_WIDTH = 512;
+const float PROCESS_HEIGHT = 910;
+
 void findCut(Mat& image) {
+    Size newSize;
+
+    if(image.size().width < PROCESS_WIDTH || image.size().height < PROCESS_HEIGHT) {
+        newSize = image.size();
+    } else if(image.size().height < image.size().width) {
+        newSize = Size(PROCESS_HEIGHT, PROCESS_WIDTH);
+    } else {
+        newSize = Size(PROCESS_WIDTH, PROCESS_HEIGHT);
+    }
+
+    const float ratioWidth = image.size().width / newSize.width;
+    const float ratioHeight = image.size().height / newSize.height;
+    Mat resizedImage;
+    resize(image, resizedImage, newSize, 0, 0, INTER_AREA);
+
     vector<vector<Point> > squares;
-    findSquares(image.clone(), squares);
+    findSquares(resizedImage.clone(), squares);
 
     sort(squares.begin(), squares.end(), [](const vector<Point>& a, const vector<Point>& b){
         return contourArea(a) > contourArea(b);
     });
 
-    fourPointTransform(image, vector<Point2f>(squares[0].begin(), squares[0].end()));
+    vector<vector<Point> > unresizedSquares;
+
+    for (const auto& square : squares) {
+        vector<Point> unresizedSquare;
+        for (auto &i : square) {
+            unresizedSquare.emplace_back(i.x * ratioWidth, i.y * ratioHeight);
+        }
+
+        unresizedSquares.push_back(unresizedSquare);
+    }
+
+    fourPointTransform(image, vector<Point2f>(unresizedSquares[0].begin(), unresizedSquares[0].end()));
+
+    image = removeShadows(image);
 }
