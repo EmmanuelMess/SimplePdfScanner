@@ -1,4 +1,4 @@
-package com.emmanuelmess.simple_pdf_scanner.processing
+package com.emmanuelmess.simple_pdf_scanner
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
