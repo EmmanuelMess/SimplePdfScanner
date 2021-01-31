@@ -60,7 +60,7 @@ jobject createBitmap(JNIEnv* env, jint width, jint height) {
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_emmanuelmess_simple_1pdf_1scanner_processing_MainProcessor_process(
+Java_com_emmanuelmess_simple_1pdf_1scanner_MainProcessor_process(
         JNIEnv* env,
         jobject /* this */,
         jobject bitmap
@@ -72,4 +72,3 @@ Java_com_emmanuelmess_simple_1pdf_1scanner_processing_MainProcessor_process(
     convertToBitmap(env, newBitmap, mat);
     return newBitmap;
 }
-
