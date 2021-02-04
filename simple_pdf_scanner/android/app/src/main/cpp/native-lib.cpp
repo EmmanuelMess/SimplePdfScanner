@@ -66,7 +66,12 @@ Java_com_emmanuelmess_simple_1pdf_1scanner_MainProcessor_process(
         jobject bitmap
 ) {
     Mat mat = convertToMat(env, bitmap);
-    findCut(mat);
+    bool correct = findCut(mat);
+
+    if(correct) {
+        return nullptr;
+    }
+
     jobject newBitmap = createBitmap(env, mat.cols, mat.rows);
     //FIXME AndroidBitmap_unlockPixels(env, bitmap);
     convertToBitmap(env, newBitmap, mat);

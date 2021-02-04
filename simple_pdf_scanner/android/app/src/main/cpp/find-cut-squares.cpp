@@ -9,11 +9,11 @@ using namespace cv;
 using namespace std;
 
 int thresh = 20, N = 11;
-
+const char* wndname = "Square Detection Demo";
 // helper function:
 // finds a cosine of angle between vectors
 // from pt0->pt1 and from pt0->pt2
-static double angle( const Point& pt1, const Point& pt2, const Point& pt0 ) {
+inline double angle( const Point& pt1, const Point& pt2, const Point& pt0 ) {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
     double dx2 = pt2.x - pt0.x;
@@ -136,7 +136,7 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares ) {
     }
 }
 
-static Mat removeShadows(const Mat& image) {
+static void removeShadows(const Mat& image, Mat &result) {
     Mat rgb_planes[3];
     split(image, rgb_planes);
     Mat dilatation;
@@ -157,16 +157,13 @@ static Mat removeShadows(const Mat& image) {
         normalize(difference, rgb_result[i], 0, 255, NORM_MINMAX, CV_8UC1);
     }
 
-    Mat result;
     merge(rgb_result, 3, result);
-
-    return result;
 }
 
 const float PROCESS_WIDTH = 512;
 const float PROCESS_HEIGHT = 910;
 
-void findCut(Mat& image) {
+static void intelliResize(const Mat& image, Mat &result, float& ratioWidth, float& ratioHeight) {
     Size newSize;
 
     if(image.size().width < PROCESS_WIDTH || image.size().height < PROCESS_HEIGHT) {
@@ -177,10 +174,16 @@ void findCut(Mat& image) {
         newSize = Size(PROCESS_WIDTH, PROCESS_HEIGHT);
     }
 
-    const float ratioWidth = image.size().width / newSize.width;
-    const float ratioHeight = image.size().height / newSize.height;
+    ratioWidth = image.size().width / newSize.width;
+    ratioHeight = image.size().height / newSize.height;
+    resize(image, result, newSize, 0, 0, INTER_AREA);
+}
+
+bool findCut(Mat& image) {
     Mat resizedImage;
-    resize(image, resizedImage, newSize, 0, 0, INTER_AREA);
+    float ratioWidth;
+    float ratioHeight;
+    intelliResize(image.clone(), resizedImage, ratioWidth, ratioHeight);
 
     vector<vector<Point> > squares;
     findSquares(resizedImage.clone(), squares);
@@ -193,6 +196,8 @@ void findCut(Mat& image) {
 
     for (const auto& square : squares) {
         vector<Point> unresizedSquare;
+
+        unresizedSquare.reserve(square.size());
         for (auto &i : square) {
             unresizedSquare.emplace_back(i.x * ratioWidth, i.y * ratioHeight);
         }
@@ -200,7 +205,12 @@ void findCut(Mat& image) {
         unresizedSquares.push_back(unresizedSquare);
     }
 
-    fourPointTransform(image, vector<Point2f>(unresizedSquares[0].begin(), unresizedSquares[0].end()));
+    if(unresizedSquares.empty()) {
+        return false;
+    }
 
-    image = removeShadows(image);
+    fourPointTransform(image, vector<Point2f>(unresizedSquares[0].begin(), unresizedSquares[0].end()));
+    //removeShadows(copy, image);
+
+    return true;
 }

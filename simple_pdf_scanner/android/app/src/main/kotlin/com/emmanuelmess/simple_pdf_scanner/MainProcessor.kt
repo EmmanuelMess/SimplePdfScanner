@@ -19,6 +19,14 @@ object MainProcessor {
 
             val imgResult = process(bitmap)
 
+            if(imgResult == null) {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                val byteArray = byteArrayOutputStream.toByteArray()
+                callback(byteArray)
+                return@thread
+            }
+            
             val matrix = Matrix().apply {
                 postRotate(90f)
             }
@@ -33,5 +41,5 @@ object MainProcessor {
         }
     }
 
-    private external fun process(b: Bitmap): Bitmap
+    private external fun process(b: Bitmap): Bitmap?
 }

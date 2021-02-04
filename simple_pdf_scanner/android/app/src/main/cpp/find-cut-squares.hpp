@@ -5,6 +5,6 @@
 
 using namespace cv;
 
-void findCut(Mat & image);
+bool findCut(Mat & image);
 
 #endif //TEST2_FIND_CUT_SQUARES_HPP
