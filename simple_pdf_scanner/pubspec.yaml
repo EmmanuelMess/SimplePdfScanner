@@ -25,25 +25,24 @@ dependencies:
     sdk: flutter
 
   android_intent: '>=0.3.7 <2.0.0'
-  path_provider: ^1.6.18
+  path_provider: ^2.0.0
   path: ^1.7.0
-  image: ^2.1.18
+  image: ^3.0.2
 
   pdf: ^2.0.0
   printing: ^4.0.0
 
-  easy_localization: ^2.3.2
+  easy_localization: ^3.0.0
 
-  floor: ^0.18.0
+  floor: ^1.1.0
   datetime_picker_formfield: ^1.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  floor_generator: ^0.18.0
-  build_runner: ^1.7.3
-  moor_ffi: ^0.8.0
+  floor_generator: ^1.1.0
+  build_runner: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

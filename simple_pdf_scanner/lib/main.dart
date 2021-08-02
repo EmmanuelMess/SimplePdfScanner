@@ -9,6 +9,7 @@ Future<void> main() async {
   final database = await $FloorAppDatabase.databaseBuilder('app_database.db')
       .build();
 
+  await EasyLocalization.ensureInitialized();
   runApp(
       EasyLocalization(
         supportedLocales: [Locale('en'), Locale('es')],
