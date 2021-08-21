@@ -1,23 +1,34 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:easy_localization/easy_localization.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ImageEditorPage extends StatelessWidget {
+class ImageEditorPage extends StatefulWidget {
+  final String imagePath;
+
+  const ImageEditorPage( this.imagePath, {Key key}) : super(key: key);
+
+  @override
+  _ImageEditorState createState() => _ImageEditorState(imagePath);
+}
+
+class _ImageEditorState extends State<ImageEditorPage> {
   static final String CHANNEL = "com.emmanuelmess.simple_pdf_scanner/MAIN";
 
   final String imagePath;
 
-  const ImageEditorPage( this.imagePath, {Key key}) : super(key: key);
+  _ImageEditorState( this.imagePath) : super();
 
   @override
   Widget build(BuildContext context) {
     final Future<Uint8List> processFuture = startProcessing(imagePath);
 
     return Scaffold(
-      appBar: AppBar(title: Text('')),
+      appBar: AppBar(title: Text('SimplePdfScanner').tr()),
       body: FutureBuilder(
         future: processFuture,
         builder: (context, snapshot) {
