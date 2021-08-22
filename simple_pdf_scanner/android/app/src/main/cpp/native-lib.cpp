@@ -77,3 +77,29 @@ Java_com_emmanuelmess_simple_1pdf_1scanner_MainProcessor_process(
     convertToBitmap(env, newBitmap, mat);
     return newBitmap;
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_emmanuelmess_simple_1pdf_1scanner_MainProcessor_getCorners(
+        JNIEnv* env,
+        jobject /* this */,
+        jobject bitmap,
+        jintArray array
+) {
+    std::vector<Point2f> corners;
+
+    Mat mat = convertToMat(env, bitmap);
+    getCorners(mat, corners);
+
+    if(corners.empty()) {
+        return;
+    }
+
+    jint result[4*2];
+
+    for(int i = 0; i < corners.size(); i++) {
+        result[i*2] = (int) corners[i].x;
+        result[i*2+1] = (int) corners[i].y;
+    }
+
+    env->SetIntArrayRegion(array, 0, 4*2, result);
+}

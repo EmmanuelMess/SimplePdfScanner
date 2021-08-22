@@ -22,12 +22,16 @@ class _ImageEditorState extends State<ImageEditorPage> {
 
   final String imagePath;
 
-  _ImageEditorState( this.imagePath) : super();
+  Image _image;
+
+  _ImageEditorState( this.imagePath) : super() {
+    _image = Image.file(File(imagePath));
+  }
+
+  List<int> _points;
 
   @override
   Widget build(BuildContext context) {
-    final Future<Uint8List> processFuture = startProcessing(imagePath);
-
     return Scaffold(
       appBar: AppBar(title: Text('SimplePdfScanner').tr()),
       body: FutureBuilder(
@@ -35,7 +39,7 @@ class _ImageEditorState extends State<ImageEditorPage> {
         builder: (context, snapshot) {
           if(!snapshot.hasData) {
             return Stack(children: [
-              Image.file(File(imagePath)),
+              _image,
               Center(child: CircularProgressIndicator()),
             ]);
           }
@@ -44,7 +48,7 @@ class _ImageEditorState extends State<ImageEditorPage> {
             width: 400,
             height: 400,
             child: CustomPaint(
-              painter: _PaperDelimitationPainter(snapshot.data),
+              painter: _PaperDelimitationPainter(snapshot.data, _points),
             ),
           );
         },
@@ -52,14 +56,43 @@ class _ImageEditorState extends State<ImageEditorPage> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.check),
         onPressed: () async {
+          //TODO save points
+
           Navigator.pop(context);
         },
       ),
     );
   }
 
-  static Future<ui.Image> getImage(String imagePath) async {
+  Future<ui.Image> getImage(String imagePath) async {
+    Int32List result = await startGetCorners(imagePath);
+
+    _points = [];
+
+    if(result.isEmpty) {
+      final doublePoints = [
+        _image.width * 1/4, _image.height * 1/4,
+        _image.width * 3/4, _image.height * 1/4,
+        _image.width * 3/4, _image.height * 3/4,
+        _image.width * 1/4, _image.height * 3/4,
+      ];
+
+      for(final point in doublePoints) {
+        _points.add(point.toInt());
+      }
+    } else {
+      for (var i = 0; i < 4*2; i++) {
+        _points.add(result[i]);
+      }
+    }
+
     return decodeImageFromList(await File(imagePath).readAsBytes());
+  }
+
+  static Future<Int32List> startGetCorners(String imagePath) async {
+    final _methodChannel = MethodChannel(CHANNEL);
+
+    return _methodChannel.invokeMethod("getCorners", imagePath);
   }
 
   static Future<Uint8List> startProcessing(String imagePath) async {
@@ -73,12 +106,12 @@ class _PaperDelimitationPainter extends CustomPainter {
   static const LINE_COLOR = Colors.teal;
 
   final ui.Image image;
+  final List<int> coords;
 
-  _PaperDelimitationPainter(this.image);
+  _PaperDelimitationPainter(this.image, this.coords);
 
   @override
   void paint(Canvas canvas, Size size) {
-
     canvas.drawImageRect(
       image,
       ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
@@ -90,22 +123,21 @@ class _PaperDelimitationPainter extends CustomPainter {
       ..color = LINE_COLOR
       ..strokeWidth = 10;
 
-    //list of points
-    final points = [Offset(50, 50),
-      Offset(80, 70),
-      Offset(80, 30),
-      Offset(380, 175)];
+    final rX = size.width/image.width;
+    final rY = size.height/image.height;
+    List<Offset> offsets = [];
 
-    for(final point in points) {
-      canvas.drawCircle(point, 5, paint);
+    for(var i = 0; i < 4; i++) {
+      final offset = Offset(coords[i*2] * rX, coords[i*2+1] * rY);
+      offsets.add(offset);
+      canvas.drawCircle(offset, 5, paint);
     }
 
     final paintPoly = Paint()
       ..color = LINE_COLOR
       ..strokeWidth = 3;
 
-    canvas.drawPoints(ui.PointMode.polygon, points + [points[0]], paintPoly);
-
+    canvas.drawPoints(ui.PointMode.polygon, offsets + [offsets[0]], paintPoly);
   }
 
   @override

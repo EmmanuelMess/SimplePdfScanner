@@ -13,14 +13,24 @@ class MainActivity: FlutterActivity() {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
                 .setMethodCallHandler { call, result ->
-                    if (call.method == "process") {
-                        MainProcessor.startProcessing(call.arguments as String) { image ->
-                            runOnUiThread {
-                                result.success(image)
+                    when(call.method) {
+                        "process" -> {
+                            MainProcessor.startProcessing(call.arguments as String) { image ->
+                                runOnUiThread {
+                                    result.success(image)
+                                }
                             }
                         }
-                    } else {
-                        result.notImplemented()
+                        "getCorners" -> {
+                            MainProcessor.startGetCorners(call.arguments as String) { corners ->
+                                runOnUiThread {
+                                    result.success(corners)
+                                }
+                            }
+                        }
+                        else -> {
+                            result.notImplemented()
+                        }
                     }
                 }
     }

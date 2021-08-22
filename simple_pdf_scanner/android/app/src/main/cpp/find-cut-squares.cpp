@@ -179,7 +179,7 @@ static void intelliResize(const Mat& image, Mat &result, float& ratioWidth, floa
     resize(image, result, newSize, 0, 0, INTER_AREA);
 }
 
-bool findCut(Mat& image) {
+void getCorners(Mat& image, std::vector<Point2f> & points) {
     Mat resizedImage;
     float ratioWidth;
     float ratioHeight;
@@ -188,28 +188,32 @@ bool findCut(Mat& image) {
     vector<vector<Point> > squares;
     findSquares(resizedImage.clone(), squares);
 
+    if(squares.empty()) {
+         return;
+    }
+
     sort(squares.begin(), squares.end(), [](const vector<Point>& a, const vector<Point>& b){
         return contourArea(a) > contourArea(b);
     });
 
-    vector<vector<Point> > unresizedSquares;
+    vector<Point>& chosenSquare = squares[0];
 
-    for (const auto& square : squares) {
-        vector<Point> unresizedSquare;
-
-        unresizedSquare.reserve(square.size());
-        for (auto &i : square) {
-            unresizedSquare.emplace_back(i.x * ratioWidth, i.y * ratioHeight);
-        }
-
-        unresizedSquares.push_back(unresizedSquare);
+    points.reserve(chosenSquare.size());
+    for (auto &i : chosenSquare) {
+        points.emplace_back(i.x * ratioWidth, i.y * ratioHeight);
     }
+}
 
-    if(unresizedSquares.empty()) {
+bool findCut(Mat& image) {
+    vector<Point2f> unresizedSquare;
+
+    getCorners(image, unresizedSquare);
+
+    if(unresizedSquare.empty()) {
         return false;
     }
 
-    fourPointTransform(image, vector<Point2f>(unresizedSquares[0].begin(), unresizedSquares[0].end()));
+    fourPointTransform(image, unresizedSquare);
     //removeShadows(copy, image);
 
     return true;
