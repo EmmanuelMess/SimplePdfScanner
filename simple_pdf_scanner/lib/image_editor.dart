@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
+import 'package:touchable/touchable.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 
@@ -21,34 +25,48 @@ class _ImageEditorState extends State<ImageEditorPage> {
   static final String CHANNEL = "com.emmanuelmess.simple_pdf_scanner/MAIN";
 
   final String imagePath;
+  File _imageFile;
+  double _imageRatio;
 
-  Image _image;
-
-  _ImageEditorState( this.imagePath) : super() {
-    _image = Image.file(File(imagePath));
+  _ImageEditorState(this.imagePath) : super() {
+    _imageFile = File(imagePath);
   }
 
-  List<int> _points;
+  ValueNotifier<List<int>> _points;
+
+  @override
+  void initState() {
+    super.initState();
+    _points = ValueNotifier([]);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('SimplePdfScanner').tr()),
       body: FutureBuilder(
-        future: getImage(imagePath),
+        future: _getImage(imagePath),
         builder: (context, snapshot) {
-          if(!snapshot.hasData) {
+          if (!snapshot.hasData) {
             return Stack(children: [
-              _image,
-              Center(child: CircularProgressIndicator()),
+              Image.file(_imageFile),
+              const Center(child: CircularProgressIndicator()),
             ]);
           }
 
-          return Container(
-            width: 400,
-            height: 400,
-            child: CustomPaint(
-              painter: _PaperDelimitationPainter(snapshot.data, _points),
+          final canvasBuilder = (context) =>
+              CustomPaint(
+                painter: _PaperDelimitationPainter(
+                  context,
+                  snapshot.data,
+                  _points,
+                ),
+              );
+
+          return Center(
+            child: AspectRatio(
+              aspectRatio: _imageRatio,
+              child: CanvasTouchDetector(builder: canvasBuilder),
             ),
           );
         },
@@ -64,38 +82,43 @@ class _ImageEditorState extends State<ImageEditorPage> {
     );
   }
 
-  Future<ui.Image> getImage(String imagePath) async {
-    Int32List result = await startGetCorners(imagePath);
+  Future<ui.Image> _getImage(String imagePath) async {
+    Int32List result = await _startGetCorners(imagePath);
 
-    _points = [];
+    final imageAsBytes = _imageFile.readAsBytesSync();
+
+    final decodedImage = await decodeImageFromList(imageAsBytes);
+    _imageRatio = decodedImage.width / decodedImage.height;
+
+    _points.value = [];
 
     if(result.isEmpty) {
       final doublePoints = [
-        _image.width * 1/4, _image.height * 1/4,
-        _image.width * 3/4, _image.height * 1/4,
-        _image.width * 3/4, _image.height * 3/4,
-        _image.width * 1/4, _image.height * 3/4,
+        decodedImage.width * 1/4, decodedImage.height * 1/4,
+        decodedImage.width * 3/4, decodedImage.height * 1/4,
+        decodedImage.width * 3/4, decodedImage.height * 3/4,
+        decodedImage.width * 1/4, decodedImage.height * 3/4,
       ];
 
       for(final point in doublePoints) {
-        _points.add(point.toInt());
+        _points.value.add(point.toInt());
       }
     } else {
       for (var i = 0; i < 4*2; i++) {
-        _points.add(result[i]);
+        _points.value.add(result[i]);
       }
     }
 
-    return decodeImageFromList(await File(imagePath).readAsBytes());
+    return decodedImage;
   }
 
-  static Future<Int32List> startGetCorners(String imagePath) async {
+  static Future<Int32List> _startGetCorners(String imagePath) async {
     final _methodChannel = MethodChannel(CHANNEL);
 
     return _methodChannel.invokeMethod("getCorners", imagePath);
   }
 
-  static Future<Uint8List> startProcessing(String imagePath) async {
+  static Future<Uint8List> _startProcessing(String imagePath) async {
     final _methodChannel = MethodChannel(CHANNEL);
 
     return await _methodChannel.invokeMethod("process", imagePath);
@@ -105,10 +128,15 @@ class _ImageEditorState extends State<ImageEditorPage> {
 class _PaperDelimitationPainter extends CustomPainter {
   static const LINE_COLOR = Colors.teal;
 
+  final BuildContext context;
   final ui.Image image;
-  final List<int> coords;
+  final ValueNotifier<List<int>> coords;
 
-  _PaperDelimitationPainter(this.image, this.coords);
+  _PaperDelimitationPainter(this.context, this.image, this.coords)
+      : super(repaint: coords);
+
+  int _selectedIndex;
+  List<Offset> offsets = [];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -119,18 +147,54 @@ class _PaperDelimitationPainter extends CustomPainter {
       Paint(),
     );
 
+    final rX = size.width/image.width;
+    final rY = size.height/image.height;
+
+    final myCanvas = TouchyCanvas(context, canvas);
+    final transparentPaint = Paint()
+      ..color = Colors.transparent;
+
+    myCanvas.drawRect(
+        Rect.fromLTWH(0,0, size.width, size.height),
+        transparentPaint,
+        onPanUpdate: (details) {
+          if(_selectedIndex == null) {
+            return;
+          }
+
+          coords.value[_selectedIndex * 2] += details.delta.dx.toInt()*4;
+          coords.value[_selectedIndex * 2 + 1] += details.delta.dy.toInt()*4;
+          coords.notifyListeners();
+        },
+        onTapUp: (details) {
+          _selectedIndex = null;
+        }
+    );
+
     final paint = Paint()
       ..color = LINE_COLOR
       ..strokeWidth = 10;
 
-    final rX = size.width/image.width;
-    final rY = size.height/image.height;
-    List<Offset> offsets = [];
+    offsets = [];
 
     for(var i = 0; i < 4; i++) {
-      final offset = Offset(coords[i*2] * rX, coords[i*2+1] * rY);
+      final offset = Offset(
+          coords.value[i * 2] * rX, coords.value[i * 2 + 1] * rY);
       offsets.add(offset);
-      canvas.drawCircle(offset, 5, paint);
+      canvas.drawCircle(offset, 10, paint);
+
+      myCanvas.drawCircle(
+        offset,
+        50,
+        transparentPaint,
+        hitTestBehavior: HitTestBehavior.translucent,
+        onPanStart: (details) {
+          //TODO show section in detail with magnifying glass
+          coords.notifyListeners();
+
+          _selectedIndex = i;
+        },
+      );
     }
 
     final paintPoly = Paint()
@@ -141,5 +205,7 @@ class _PaperDelimitationPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(_PaperDelimitationPainter oldDelegate) {
+    return listEquals(offsets, oldDelegate.offsets);
+  }
 }
