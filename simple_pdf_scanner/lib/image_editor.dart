@@ -8,7 +8,6 @@ import 'package:touchable/touchable.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -162,8 +161,8 @@ class _PaperDelimitationPainter extends CustomPainter {
             return;
           }
 
-          coords.value[_selectedIndex * 2] += details.delta.dx.toInt()*4;
-          coords.value[_selectedIndex * 2 + 1] += details.delta.dy.toInt()*4;
+          coords.value[_selectedIndex * 2] = (details.localPosition.dx * 1/rX).toInt();
+          coords.value[_selectedIndex * 2 + 1] = (details.localPosition.dy * 1/rY).toInt();
           coords.notifyListeners();
         },
         onTapUp: (details) {
@@ -188,7 +187,7 @@ class _PaperDelimitationPainter extends CustomPainter {
         50,
         transparentPaint,
         hitTestBehavior: HitTestBehavior.translucent,
-        onPanStart: (details) {
+        onTapDown: (details) {
           //TODO show section in detail with magnifying glass
           coords.notifyListeners();
 
