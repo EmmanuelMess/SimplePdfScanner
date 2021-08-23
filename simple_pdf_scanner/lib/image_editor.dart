@@ -147,7 +147,9 @@ class _PaperDelimitationPainter extends CustomPainter {
     );
 
     final rX = size.width/image.width;
+    final invrX = 1/rX;
     final rY = size.height/image.height;
+    final invrY = 1/rY;
 
     final myCanvas = TouchyCanvas(context, canvas);
     final transparentPaint = Paint()
@@ -161,8 +163,11 @@ class _PaperDelimitationPainter extends CustomPainter {
             return;
           }
 
-          coords.value[_selectedIndex * 2] = (details.localPosition.dx * 1/rX).toInt();
-          coords.value[_selectedIndex * 2 + 1] = (details.localPosition.dy * 1/rY).toInt();
+          //TODO add corrections so that the figure never becomes concave
+          //TODO add corrections so that points are never above each other
+
+          coords.value[_selectedIndex * 2] = (details.localPosition.dx * invrX).toInt();
+          coords.value[_selectedIndex * 2 + 1] = (details.localPosition.dy * invrY).toInt();
           coords.notifyListeners();
         },
         onTapUp: (details) {
