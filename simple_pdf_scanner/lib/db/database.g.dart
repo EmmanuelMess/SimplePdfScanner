@@ -22,11 +22,11 @@ class $FloorAppDatabase {
 class _$AppDatabaseBuilder {
   _$AppDatabaseBuilder(this.name);
 
-  final String name;
+  final String? name;
 
   final List<Migration> _migrations = [];
 
-  Callback _callback;
+  Callback? _callback;
 
   /// Adds migrations to the builder.
   _$AppDatabaseBuilder addMigrations(List<Migration> migrations) {
@@ -43,7 +43,7 @@ class _$AppDatabaseBuilder {
   /// Creates the database and initializes it.
   Future<AppDatabase> build() async {
     final path = name != null
-        ? await sqfliteDatabaseFactory.getDatabasePath(name)
+        ? await sqfliteDatabaseFactory.getDatabasePath(name!)
         : ':memory:';
     final database = _$AppDatabase();
     database.database = await database.open(
@@ -56,20 +56,21 @@ class _$AppDatabaseBuilder {
 }
 
 class _$AppDatabase extends AppDatabase {
-  _$AppDatabase([StreamController<String> listener]) {
+  _$AppDatabase([StreamController<String>? listener]) {
     changeListener = listener ?? StreamController<String>.broadcast();
   }
 
-  ProtoPdfDao _protoPdfDaoInstance;
+  ProtoPdfDao? _protoPdfDaoInstance;
 
-  ImageDao _imageDaoInstance;
+  ImageDao? _imageDaoInstance;
 
   Future<sqflite.Database> open(String path, List<Migration> migrations,
-      [Callback callback]) async {
+      [Callback? callback]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
       version: 1,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
+        await callback?.onConfigure?.call(database);
       },
       onOpen: (database) async {
         await callback?.onOpen?.call(database);
@@ -82,9 +83,9 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `ProtoPdf` (`id` INTEGER, `title` TEXT, `creation` INTEGER, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `ProtoPdf` (`id` INTEGER, `title` TEXT NOT NULL, `creation` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER, `path` TEXT, `thumb_path` TEXT, `position` INTEGER, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER NOT NULL, `path` TEXT NOT NULL, `thumb_path` TEXT NOT NULL, `position` INTEGER NOT NULL, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -109,7 +110,7 @@ class _$ProtoPdfDao extends ProtoPdfDao {
         _protoPdfInsertionAdapter = InsertionAdapter(
             database,
             'ProtoPdf',
-            (ProtoPdf item) => <String, dynamic>{
+            (ProtoPdf item) => <String, Object?>{
                   'id': item.id,
                   'title': item.title,
                   'creation': item.creation
@@ -119,7 +120,7 @@ class _$ProtoPdfDao extends ProtoPdfDao {
             database,
             'ProtoPdf',
             ['id'],
-            (ProtoPdf item) => <String, dynamic>{
+            (ProtoPdf item) => <String, Object?>{
                   'id': item.id,
                   'title': item.title,
                   'creation': item.creation
@@ -129,7 +130,7 @@ class _$ProtoPdfDao extends ProtoPdfDao {
             database,
             'ProtoPdf',
             ['id'],
-            (ProtoPdf item) => <String, dynamic>{
+            (ProtoPdf item) => <String, Object?>{
                   'id': item.id,
                   'title': item.title,
                   'creation': item.creation
@@ -142,9 +143,6 @@ class _$ProtoPdfDao extends ProtoPdfDao {
 
   final QueryAdapter _queryAdapter;
 
-  static final _protoPdfMapper = (Map<String, dynamic> row) => ProtoPdf(
-      row['id'] as int, row['title'] as String, row['creation'] as int);
-
   final InsertionAdapter<ProtoPdf> _protoPdfInsertionAdapter;
 
   final UpdateAdapter<ProtoPdf> _protoPdfUpdateAdapter;
@@ -155,9 +153,10 @@ class _$ProtoPdfDao extends ProtoPdfDao {
   Stream<List<ProtoPdf>> findAllProtoPdfsAsStream() {
     return _queryAdapter.queryListStream(
         'SELECT * FROM ProtoPdf ORDER BY ProtoPdf.creation ASC',
+        mapper: (Map<String, Object?> row) => ProtoPdf(
+            row['id'] as int?, row['title'] as String, row['creation'] as int),
         queryableName: 'ProtoPdf',
-        isView: false,
-        mapper: _protoPdfMapper);
+        isView: false);
   }
 
   @override
@@ -182,7 +181,7 @@ class _$ImageDao extends ImageDao {
         _pdfImageInsertionAdapter = InsertionAdapter(
             database,
             'PdfImage',
-            (PdfImage item) => <String, dynamic>{
+            (PdfImage item) => <String, Object?>{
                   'id': item.id,
                   'proto_pdf': item.protoPdf,
                   'path': item.path,
@@ -197,39 +196,37 @@ class _$ImageDao extends ImageDao {
 
   final QueryAdapter _queryAdapter;
 
-  static final _pdfImageMapper = (Map<String, dynamic> row) => PdfImage(
-      row['id'] as int,
-      row['proto_pdf'] as int,
-      row['path'] as String,
-      row['thumb_path'] as String,
-      row['position'] as int);
-
   final InsertionAdapter<PdfImage> _pdfImageInsertionAdapter;
 
   @override
-  Future<PdfImage> lastPosition(int protoPdfId) async {
+  Future<PdfImage?> lastPosition(int protoPdfId) async {
     return _queryAdapter.query(
-        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf AND PdfImage.position=(SELECT MAX(PdfImage.position) FROM PdfImage)',
-        arguments: <dynamic>[protoPdfId],
-        mapper: _pdfImageMapper);
+        'SELECT * FROM PdfImage WHERE ?1=PdfImage.proto_pdf AND PdfImage.position=(SELECT MAX(PdfImage.position) FROM PdfImage)',
+        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String, row['position'] as int),
+        arguments: [protoPdfId]);
   }
 
   @override
   Stream<List<PdfImage>> findAllImagesAsStream(int protoPdfId) {
     return _queryAdapter.queryListStream(
-        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
-        arguments: <dynamic>[protoPdfId],
+        'SELECT * FROM PdfImage WHERE ?1=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
+        mapper: (Map<String, Object?> row) => PdfImage(
+            row['id'] as int?,
+            row['proto_pdf'] as int,
+            row['path'] as String,
+            row['thumb_path'] as String,
+            row['position'] as int),
+        arguments: [protoPdfId],
         queryableName: 'PdfImage',
-        isView: false,
-        mapper: _pdfImageMapper);
+        isView: false);
   }
 
   @override
   Future<List<PdfImage>> findAllImages(int protoPdfId) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM PdfImage WHERE ?=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
-        arguments: <dynamic>[protoPdfId],
-        mapper: _pdfImageMapper);
+        'SELECT * FROM PdfImage WHERE ?1=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
+        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String, row['position'] as int),
+        arguments: [protoPdfId]);
   }
 
   @override

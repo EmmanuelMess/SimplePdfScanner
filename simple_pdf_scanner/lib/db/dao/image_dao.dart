@@ -7,7 +7,7 @@ abstract class ImageDao {
   Future<void> insertImage(PdfImage image);
 
   @Query('SELECT * FROM PdfImage WHERE :protoPdfId=PdfImage.proto_pdf AND PdfImage.position=(SELECT MAX(PdfImage.position) FROM PdfImage)')
-  Future<PdfImage> lastPosition(int protoPdfId);
+  Future<PdfImage?> lastPosition(int protoPdfId);
 
   @Query('SELECT * FROM PdfImage WHERE :protoPdfId=PdfImage.proto_pdf ORDER BY PdfImage.position ASC')
   Stream<List<PdfImage>> findAllImagesAsStream(int protoPdfId);

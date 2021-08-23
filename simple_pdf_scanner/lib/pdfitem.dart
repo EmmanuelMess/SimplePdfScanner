@@ -20,7 +20,7 @@ import 'db/entity/image.dart';
 import 'image_editor.dart';
 
 class ImageListPage extends StatelessWidget {
-  ImageListPage(this.pdf, this.imageDao, {Key key}) : super(key: key);
+  ImageListPage(this.pdf, this.imageDao, {Key? key}) : super(key: key);
 
   final ProtoPdf pdf;
   final ImageDao imageDao;
@@ -72,11 +72,11 @@ class ImageListPage extends StatelessWidget {
     );
 
     return StreamBuilder<List<PdfImage>>(
-      stream: imageDao.findAllImagesAsStream(pdf.id),
+      stream: imageDao.findAllImagesAsStream(pdf.id!),
       builder: (_, snapshot) {
         if (!snapshot.hasData) return GridView(gridDelegate: delegate);
 
-        final tasks = snapshot.data;
+        final tasks = snapshot.data!;
 
         return GridView.builder(
           gridDelegate: delegate,
@@ -128,7 +128,7 @@ class ImageListPage extends StatelessWidget {
     final documentsDir = await getApplicationDocumentsDirectory();
     final file = File(join(documentsDir.path, '${pdf.title}.pdf'));
     final doc = pdfcreator.Document();
-    final images = await imageDao.findAllImages(pdf.id);
+    final images = await imageDao.findAllImages(pdf.id!);
 
     for (final image in images) {
       final pdfimage = pdfcreator.MemoryImage(
@@ -165,7 +165,7 @@ class ImageListItem extends StatelessWidget {
   const ImageListItem(
       this.image,
       this.onPressed,
-      {Key key}
+      {Key? key}
   ) : super(key: key);
 
   final PdfImage image;
@@ -181,7 +181,7 @@ class ImageListItem extends StatelessWidget {
 }
 
 class ShowPdf extends StatelessWidget {
-  const ShowPdf(this.title, this.pdf, {Key key}) : super(key: key);
+  const ShowPdf(this.title, this.pdf, {Key? key}) : super(key: key);
 
   final String title;
   final Uint8List pdf;

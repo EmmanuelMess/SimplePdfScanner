@@ -12,7 +12,7 @@ import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
 )
 class PdfImage {
   @primaryKey
-  final int id;
+  final int? id;
 
   @ColumnInfo(name: 'proto_pdf')
   final int protoPdf;

@@ -18,9 +18,9 @@ class TakePicturePage extends StatefulWidget {
   final ProtoPdf pdf;
 
   const TakePicturePage({
-    Key key,
-    @required this.imageDao,
-    @required this.pdf,
+    Key? key,
+    required this.imageDao,
+    required this.pdf,
   }) : super(key: key);
 
   @override
@@ -32,13 +32,13 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
   final ImageDao imageDao;
   final ProtoPdf pdf;
 
-  Future<void> promisedActivity;
+  late Future<void> promisedActivity;
 
   TakePicturePageState(this.imageDao, this.pdf);
 
-  String _name;
-  String _path;
-  String _thumbpath;
+  late String _name;
+  late String _path;
+  late String _thumbpath;
   bool _resumed = false;
 
   @override
@@ -46,7 +46,7 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
     super.initState();
 
     promisedActivity = _startActivity();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
   }
 
   Future<void> _startActivity() async {
@@ -68,7 +68,7 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 
@@ -100,17 +100,21 @@ class TakePicturePageState extends State<TakePicturePage> with WidgetsBindingObs
       return;
     }
 
-    var image = decodeImage(imageFile.readAsBytesSync());
-    var thumbnail = copyResize(image, height: 250);
+    final image = decodeImage(imageFile.readAsBytesSync());
+    if(image == null) {
+      //TODO fail
+    }
+
+    final thumbnail = copyResize(image!, height: 250);
     File(_thumbpath).writeAsBytesSync(encodeJpg(thumbnail));
 
 
-    final lastPositionImage = await imageDao.lastPosition(pdf.id);
+    final lastPositionImage = await imageDao.lastPosition(pdf.id!);
     final lastPosition = lastPositionImage == null? 0 : lastPositionImage.position;
 
     await imageDao.insertImage(PdfImage(
       null,
-      pdf.id,
+      pdf.id!,
       _path,
       _thumbpath,
       lastPosition + 1,

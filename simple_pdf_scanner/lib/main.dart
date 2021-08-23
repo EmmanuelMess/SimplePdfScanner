@@ -24,7 +24,7 @@ class SimplePdfScannerApp extends StatelessWidget {
 
   final AppDatabase database;
 
-  const SimplePdfScannerApp(this.database, {Key key}) : super(key: key);
+  const SimplePdfScannerApp(this.database, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

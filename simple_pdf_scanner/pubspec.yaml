@@ -18,24 +18,24 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  android_intent: '>=0.3.7 <2.0.0'
+  android_intent: ^2.0.2
   path_provider: ^2.0.0
   path: ^1.7.0
   image: ^3.0.2
 
-  pdf: ^2.0.0
-  printing: ^4.0.0
+  pdf: ^3.4.2
+  printing: ^5.5.0
 
   easy_localization: ^3.0.0
 
   floor: ^1.1.0
-  datetime_picker_formfield: ^1.0.0
+  datetime_picker_formfield: ^2.0.0
   touchable: ^1.0.0
 
 dev_dependencies:

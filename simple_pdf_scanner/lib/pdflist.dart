@@ -10,7 +10,7 @@ import 'animation.dart';
 import 'db/entity/image.dart';
 
 class PdfListPage extends StatelessWidget {
-  PdfListPage(this.protoPdfDao, this.imageDao, {Key key}) : super(key: key);
+  PdfListPage(this.protoPdfDao, this.imageDao, {Key? key}) : super(key: key);
 
   final ProtoPdfDao protoPdfDao;
   final ImageDao imageDao;
@@ -31,9 +31,11 @@ class PdfListPage extends StatelessWidget {
     return StreamBuilder<List<ProtoPdf>>(
       stream: protoPdfDao.findAllProtoPdfsAsStream(),
       builder: (_, snapshot) {
-        if (!snapshot.hasData) return ListView();
+        if (!snapshot.hasData) {
+          return ListView();
+        }
 
-        final tasks = snapshot.data;
+        final tasks = snapshot.data!;
 
         return ListView.builder(
           itemCount: tasks.length,
@@ -75,11 +77,11 @@ class PdfListPage extends StatelessWidget {
 
 class PdfListItem extends StatelessWidget {
   const PdfListItem({
-    Key key,
-    @required this.protoPdfDao,
-    @required this.imageDao,
-    @required this.pdf,
-    @required this.onPressed
+    Key? key,
+    required this.protoPdfDao,
+    required this.imageDao,
+    required this.pdf,
+    required this.onPressed
   }) : super(key: key);
 
   final ProtoPdfDao protoPdfDao;
@@ -92,11 +94,11 @@ class PdfListItem extends StatelessWidget {
     return ListTile(
       title: Text(pdf.title),
       subtitle: StreamBuilder<List<PdfImage>>(
-        stream: imageDao.findAllImagesAsStream(pdf.id),
+        stream: imageDao.findAllImagesAsStream(pdf.id!),
         builder: (_, snapshot) {
           if (!snapshot.hasData) return Text("");
 
-          return Text("NumberImages").tr(args: [snapshot.data.length.toString()]);
+          return Text("NumberImages").tr(args: [snapshot.data!.length.toString()]);
         },
       ),
       onTap: onPressed,

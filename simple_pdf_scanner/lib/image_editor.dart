@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 class ImageEditorPage extends StatefulWidget {
   final String imagePath;
 
-  const ImageEditorPage( this.imagePath, {Key key}) : super(key: key);
+  const ImageEditorPage( this.imagePath, {Key? key}) : super(key: key);
 
   @override
   _ImageEditorState createState() => _ImageEditorState(imagePath);
@@ -24,20 +24,14 @@ class _ImageEditorState extends State<ImageEditorPage> {
   static final String CHANNEL = "com.emmanuelmess.simple_pdf_scanner/MAIN";
 
   final String imagePath;
-  File _imageFile;
-  double _imageRatio;
+  late File _imageFile;
+  late double _imageRatio;
 
   _ImageEditorState(this.imagePath) : super() {
     _imageFile = File(imagePath);
   }
 
-  ValueNotifier<List<int>> _points;
-
-  @override
-  void initState() {
-    super.initState();
-    _points = ValueNotifier([]);
-  }
+  ValueNotifier<List<int>> _points = ValueNotifier([]);
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +51,7 @@ class _ImageEditorState extends State<ImageEditorPage> {
               CustomPaint(
                 painter: _PaperDelimitationPainter(
                   context,
-                  snapshot.data,
+                  snapshot.data! as ui.Image,
                   _points,
                 ),
               );
@@ -114,7 +108,7 @@ class _ImageEditorState extends State<ImageEditorPage> {
   static Future<Int32List> _startGetCorners(String imagePath) async {
     final _methodChannel = MethodChannel(CHANNEL);
 
-    return _methodChannel.invokeMethod("getCorners", imagePath);
+    return _methodChannel.invokeMethod("getCorners", imagePath) as Future<Int32List>;
   }
 
   static Future<Uint8List> _startProcessing(String imagePath) async {
@@ -134,7 +128,7 @@ class _PaperDelimitationPainter extends CustomPainter {
   _PaperDelimitationPainter(this.context, this.image, this.coords)
       : super(repaint: coords);
 
-  int _selectedIndex;
+  int? _selectedIndex;
   List<Offset> offsets = [];
 
   @override
@@ -166,8 +160,8 @@ class _PaperDelimitationPainter extends CustomPainter {
           //TODO add corrections so that the figure never becomes concave
           //TODO add corrections so that points are never above each other
 
-          coords.value[_selectedIndex * 2] = (details.localPosition.dx * invrX).toInt();
-          coords.value[_selectedIndex * 2 + 1] = (details.localPosition.dy * invrY).toInt();
+          coords.value[_selectedIndex! * 2] = (details.localPosition.dx * invrX).toInt();
+          coords.value[_selectedIndex! * 2 + 1] = (details.localPosition.dy * invrY).toInt();
           coords.notifyListeners();
         },
         onTapUp: (details) {
