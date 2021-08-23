@@ -63,7 +63,6 @@ class _TakePicturePageState extends State<TakePicturePage>
   CameraController? controller;
   XFile? imageFile;
   VoidCallback? videoPlayerListener;
-  bool enableAudio = true;
   double _minAvailableExposureOffset = 0.0;
   double _maxAvailableExposureOffset = 0.0;
   double _currentExposureOffset = 0.0;
@@ -271,11 +270,6 @@ class _TakePicturePageState extends State<TakePicturePage>
               icon: Icon(Icons.filter_center_focus),
               color: Colors.blue,
               onPressed: controller != null ? onFocusModeButtonPressed : null,
-            ),
-            IconButton(
-              icon: Icon(enableAudio ? Icons.volume_up : Icons.volume_mute),
-              color: Colors.blue,
-              onPressed: controller != null ? onAudioModeButtonPressed : null,
             ),
             IconButton(
               icon: Icon(controller?.value.isCaptureOrientationLocked ?? false
@@ -561,7 +555,7 @@ class _TakePicturePageState extends State<TakePicturePage>
     final CameraController cameraController = CameraController(
       cameraDescription,
       ResolutionPreset.medium,
-      enableAudio: enableAudio,
+      enableAudio: false,
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
@@ -645,13 +639,6 @@ class _TakePicturePageState extends State<TakePicturePage>
       _focusModeControlRowAnimationController.forward();
       _flashModeControlRowAnimationController.reverse();
       _exposureModeControlRowAnimationController.reverse();
-    }
-  }
-
-  void onAudioModeButtonPressed() {
-    enableAudio = !enableAudio;
-    if (controller != null) {
-      onNewCameraSelected(controller!.description);
     }
   }
 
