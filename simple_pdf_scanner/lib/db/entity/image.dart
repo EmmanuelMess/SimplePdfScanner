@@ -19,7 +19,7 @@ class PdfImage {
 
   final String path;
 
-  final String thumb_path;
+  final String? thumb_path;
 
   final int position;
 

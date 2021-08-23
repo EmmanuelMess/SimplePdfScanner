@@ -85,7 +85,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `ProtoPdf` (`id` INTEGER, `title` TEXT NOT NULL, `creation` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER NOT NULL, `path` TEXT NOT NULL, `thumb_path` TEXT NOT NULL, `position` INTEGER NOT NULL, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `PdfImage` (`id` INTEGER, `proto_pdf` INTEGER NOT NULL, `path` TEXT NOT NULL, `thumb_path` TEXT, `position` INTEGER NOT NULL, FOREIGN KEY (`proto_pdf`) REFERENCES `ProtoPdf` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -202,7 +202,7 @@ class _$ImageDao extends ImageDao {
   Future<PdfImage?> lastPosition(int protoPdfId) async {
     return _queryAdapter.query(
         'SELECT * FROM PdfImage WHERE ?1=PdfImage.proto_pdf AND PdfImage.position=(SELECT MAX(PdfImage.position) FROM PdfImage)',
-        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String, row['position'] as int),
+        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String?, row['position'] as int),
         arguments: [protoPdfId]);
   }
 
@@ -214,7 +214,7 @@ class _$ImageDao extends ImageDao {
             row['id'] as int?,
             row['proto_pdf'] as int,
             row['path'] as String,
-            row['thumb_path'] as String,
+            row['thumb_path'] as String?,
             row['position'] as int),
         arguments: [protoPdfId],
         queryableName: 'PdfImage',
@@ -225,7 +225,7 @@ class _$ImageDao extends ImageDao {
   Future<List<PdfImage>> findAllImages(int protoPdfId) async {
     return _queryAdapter.queryList(
         'SELECT * FROM PdfImage WHERE ?1=PdfImage.proto_pdf ORDER BY PdfImage.position ASC',
-        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String, row['position'] as int),
+        mapper: (Map<String, Object?> row) => PdfImage(row['id'] as int?, row['proto_pdf'] as int, row['path'] as String, row['thumb_path'] as String?, row['position'] as int),
         arguments: [protoPdfId]);
   }
 

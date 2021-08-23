@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart' as pdfcreator;
 import 'package:pdf/widgets.dart' as pdfcreator;
 import 'package:printing/printing.dart' as pdfcreator;
-
+import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:simple_pdf_scanner/camera.dart';
 import 'package:simple_pdf_scanner/db/entity/protopdf.dart';
@@ -20,10 +20,11 @@ import 'db/entity/image.dart';
 import 'image_editor.dart';
 
 class ImageListPage extends StatelessWidget {
-  ImageListPage(this.pdf, this.imageDao, {Key? key}) : super(key: key);
-
+  final List<CameraDescription> cameras;
   final ProtoPdf pdf;
   final ImageDao imageDao;
+
+  ImageListPage(this.cameras, this.pdf, this.imageDao, {Key? key}) : super(key: key);
 
   Widget _addPhotoItem(BuildContext context) {
     return Center(
@@ -42,7 +43,7 @@ class ImageListPage extends StatelessWidget {
               context,
               AnimationHelper.slideRouteAnimation(
                     (_, __, ___) =>
-                    TakePicturePage(imageDao: imageDao, pdf: pdf),
+                    TakePicturePage(cameras, imageDao, pdf),
               ),
             );
           },
@@ -174,7 +175,7 @@ class ImageListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  ListTile(
-      title: Image.file(File(this.image.thumb_path)),
+      title: Image.file(File(this.image.path)),
       onTap: onPressed,
     );
   }

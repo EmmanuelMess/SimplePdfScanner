@@ -60,11 +60,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <activity
-            android:name=".PhotoActivity"
-            android:theme="@style/NormalTheme" >
-        </activity>
     </application>
 
 </manifest>

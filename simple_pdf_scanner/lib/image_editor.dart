@@ -76,7 +76,7 @@ class _ImageEditorState extends State<ImageEditorPage> {
   }
 
   Future<ui.Image> _getImage(String imagePath) async {
-    Int32List result = await _startGetCorners(imagePath);
+    Int32List result = (await _startGetCorners(imagePath))!;
 
     final imageAsBytes = _imageFile.readAsBytesSync();
 
@@ -105,10 +105,10 @@ class _ImageEditorState extends State<ImageEditorPage> {
     return decodedImage;
   }
 
-  static Future<Int32List> _startGetCorners(String imagePath) async {
+  static Future<Int32List?> _startGetCorners(String imagePath) async {
     final _methodChannel = MethodChannel(CHANNEL);
 
-    return _methodChannel.invokeMethod("getCorners", imagePath) as Future<Int32List>;
+    return _methodChannel.invokeMethod("getCorners", imagePath);
   }
 
   static Future<Uint8List> _startProcessing(String imagePath) async {
